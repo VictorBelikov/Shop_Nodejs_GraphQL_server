@@ -1,7 +1,6 @@
 const fs = require('fs');
 const { validationResult } = require('express-validator');
 
-const socket = require('../socket');
 const Post = require('../models/post');
 const User = require('../models/user');
 
@@ -70,11 +69,6 @@ exports.createPost = async (req, res, next) => {
     user.posts.push(post);
     await user.save();
 
-    // emit() - send to all connected users; broadcast() - send to all connected users except the one from which was sent.
-    socket
-      .getIo()
-      .emit('posts', { action: 'create', post: { ...post, creator: { _id: req.userId, name: user.name } } });
-
     res.status(201).json({
       message: 'Post created successfully!',
       post,
@@ -139,9 +133,6 @@ exports.updatePost = async (req, res, next) => {
     post.content = content;
     const updatedPost = await post.save();
 
-    // emit() - send to all connected users; broadcast() - send to all connected users except the one from which was sent.
-    socket.getIo().emit('posts', { action: 'update', post: updatedPost });
-
     res.status(200).json({ message: 'Post updated', post: updatedPost });
   } catch (err) {
     if (!err.statusCode) {
@@ -173,9 +164,6 @@ exports.deletePost = async (req, res, next) => {
     await user.save();
 
     await Post.deleteOne({ _id: postId });
-
-    // emit() - send to all connected users; broadcast() - send to all connected users except the one from which was sent.
-    socket.getIo().emit('posts', { action: 'delete', post: postId });
 
     res.status(200).json({ message: 'Post deleted' });
   } catch (err) {

@@ -1,6 +1,5 @@
 const http = require('http');
 const mongoose = require('mongoose');
-const socket = require('./socket');
 
 const app = require('./app');
 
@@ -9,7 +8,7 @@ const httpServer = http.createServer(app);
 
 mongoose
   .connect(
-    'mongodb+srv://V1ctoR:WwMEMQ54Y7T1K1Xk@online-shop.5yjc5.mongodb.net/shop_mongoose_rest?retryWrites=true&w=majority',
+    'mongodb+srv://V1ctoR:WwMEMQ54Y7T1K1Xk@online-shop.5yjc5.mongodb.net/shop_mongoose_graphql?retryWrites=true&w=majority',
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -17,11 +16,7 @@ mongoose
     },
   )
   .then(() => {
-    const server = httpServer.listen(port, () => console.log(`Server is listening on port ${port} ...`));
-    const io = socket.init(server);
-    io.on('connection', (socket) => {
-      console.log('Client connected to the socket');
-    });
+    httpServer.listen(port, () => console.log(`Server is listening on port ${port} ...`));
   })
   .catch((err) => console.log('Error while connecting to DB: ', err));
 

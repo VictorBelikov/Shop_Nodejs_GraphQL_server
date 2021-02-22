@@ -2,9 +2,10 @@ const path = require('path');
 const multer = require('multer');
 const express = require('express');
 const bodyParser = require('body-parser');
+const { graphqlHTTP } = require('express-graphql');
 
-const feedRoutes = require('./routes/feed');
-const authRoutes = require('./routes/auth');
+const graphQLSchema = require('./graphql/schema');
+const graphQLResolver = require('./graphql/resolvers');
 
 const app = express();
 
@@ -44,8 +45,24 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/feed', feedRoutes);
-app.use('/auth', authRoutes);
+// In GraphQL we have only one route
+app.use(
+  '/graphql',
+  graphqlHTTP({
+    schema: graphQLSchema,
+    rootValue: graphQLResolver,
+    graphiql: true, // provide a GUI tool inside the browser
+    customFormatErrorFn(err) {
+      if (!err.originalError) {
+        return err;
+      }
+      const { data } = err.originalError;
+      const { message } = err.originalError || 'An error occured.';
+      const { statusCode } = err.originalError || 500;
+      return { message, statusCode, data };
+    },
+  }),
+);
 
 // Special 'express' middleware for handling all errors in the app. Fires like 'next(new Error(err))' from other places.
 app.use((err, req, res, next) => {
