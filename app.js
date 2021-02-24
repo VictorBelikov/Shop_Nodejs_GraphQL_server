@@ -6,6 +6,7 @@ const { graphqlHTTP } = require('express-graphql');
 
 const graphQLSchema = require('./graphql/schema');
 const graphQLResolver = require('./graphql/resolvers');
+const auth = require('./middleware/auth');
 
 const app = express();
 
@@ -42,8 +43,15 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Браузер всегда сначала отправляет OPTIONS, чтобы убедиться может ли он отправлять остальные типы запросов.
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200); // return - Не пускаем дальше к маршрутам, т.к. методы запросов еще не разрешены.
+  }
   next();
 });
+
+app.use(auth);
 
 // In GraphQL we have only one route
 app.use(
